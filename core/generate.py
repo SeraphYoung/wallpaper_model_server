@@ -1,12 +1,8 @@
 import numpy as np
-import time
 import matplotlib.pyplot as plt
 
-import base64
-import cv2
 
-
-def __project(points, rotateM):
+def __project(model, points, direction, rotateM):
     projected = np.zeros([points.shape[0], 3], dtype=int)
     pic = np.zeros((1920, 1080, 4))
     for i in range(points.shape[0]):
@@ -19,18 +15,12 @@ def __project(points, rotateM):
             elif pic[y + 960][x + 540][3] < z:
                 pic[y + 960][x + 540][3] = z
                 pic[int(y) + 960][int(x) + 540][:3] = points[i][3:6] / 255
-    retval, buffer = cv2.imencode('.png', pic[:, :, :3])
-    pic_str = base64.b64encode(buffer)
-    pic_str = pic_str.decode()
-
-    plt.imshow(pic[:, :, :3], interpolation='gaussian')
-    plt.axis('off')
-    plt.savefig("test.png")
-    return "data:image/png;base64,"+pic_str
+    plt.imsave("static/"+model+"/"+direction+".png", pic[:, :, :3])
+    return "ok"
 
 
-def picture(model, phone_to_world_matrix):
-    path = "model/"+model
+def picture(model, direction, phone_to_world_matrix):
+    path = "model/"+model+"/model.npy"
     pointarray = np.load(path)
 
     # find the front of the object
@@ -55,4 +45,4 @@ def picture(model, phone_to_world_matrix):
 
     # M = (auxi.dot(test.dot(rm))).dot(matrix)
     M = (w2p.dot(rm)).T.dot(m2p.dot(matrix))
-    return __project(pointarray, M)
+    return __project(model, pointarray, direction, M)
